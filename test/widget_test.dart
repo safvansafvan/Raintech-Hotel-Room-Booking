@@ -1,30 +1,48 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:hotel_room_booking/main.dart';
+import 'package:hotel_room_booking/app.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('shows the booking layout and supplied rooms', (tester) async {
+    await tester.pumpWidget(const HotelBookingApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Find your perfect room'), findsOneWidget);
+    expect(find.text('Select stay dates'), findsOneWidget);
+    expect(find.text('Choose a room'), findsOneWidget);
+    expect(find.text('3. Booking summary'), findsOneWidget);
+    expect(find.text('R101'), findsOneWidget);
+    expect(find.text('R301'), findsOneWidget);
+    expect(find.text('₹3,500'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('uses the desktop two-column layout on wide screens', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.pumpWidget(const HotelBookingApp());
+
+    expect(find.byKey(const Key('desktop-booking-content')), findsOneWidget);
+    expect(find.byKey(const Key('mobile-booking-content')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('uses the stacked mobile layout on narrow screens', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const HotelBookingApp());
+
+    expect(find.byKey(const Key('mobile-booking-content')), findsOneWidget);
+    expect(find.byKey(const Key('desktop-booking-content')), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 }
