@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/room_data.dart';
 import '../models/room.dart';
 import '../services/booking_calculator.dart';
+import '../theme/app_theme.dart';
 import '../utils/booking_formatters.dart';
 import '../widgets/booking_header.dart';
 import '../widgets/booking_summary_card.dart';
@@ -139,61 +140,75 @@ class _BookingPageState extends State<BookingPage> {
     );
 
     return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth >= _desktopBreakpoint;
-            final pagePadding = isDesktop ? 32.0 : 16.0;
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFEDF3F6), AppTheme.background],
+            stops: [0, 0.42],
+          ),
+        ),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth >= _desktopBreakpoint;
+              final pagePadding = isDesktop
+                  ? 32.0
+                  : constraints.maxWidth >= 600
+                  ? 24.0
+                  : 16.0;
 
-            return SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(pagePadding, 24, pagePadding, 40),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const BookingHeader(),
-                      const SizedBox(height: 24),
-                      DateSelectionCard(
-                        checkInDate: _checkInDate == null
-                            ? null
-                            : BookingFormatters.date(_checkInDate!),
-                        checkOutDate: _checkOutDate == null
-                            ? null
-                            : BookingFormatters.date(_checkOutDate!),
-                        onCheckInTap: _selectCheckInDate,
-                        onCheckOutTap: _selectCheckOutDate,
-                        message: dateMessage,
-                        messageTone: dateMessageTone,
-                      ),
-                      const SizedBox(height: 24),
-                      if (isDesktop)
-                        Row(
-                          key: const Key('desktop-booking-content'),
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: roomList),
-                            const SizedBox(width: 24),
-                            SizedBox(width: 350, child: summary),
-                          ],
-                        )
-                      else
-                        Column(
-                          key: const Key('mobile-booking-content'),
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            roomList,
-                            const SizedBox(height: 24),
-                            summary,
-                          ],
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(pagePadding, 24, pagePadding, 40),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const BookingHeader(),
+                        const SizedBox(height: 24),
+                        DateSelectionCard(
+                          checkInDate: _checkInDate == null
+                              ? null
+                              : BookingFormatters.date(_checkInDate!),
+                          checkOutDate: _checkOutDate == null
+                              ? null
+                              : BookingFormatters.date(_checkOutDate!),
+                          onCheckInTap: _selectCheckInDate,
+                          onCheckOutTap: _selectCheckOutDate,
+                          message: dateMessage,
+                          messageTone: dateMessageTone,
                         ),
-                    ],
+                        const SizedBox(height: 24),
+                        if (isDesktop)
+                          Row(
+                            key: const Key('desktop-booking-content'),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: roomList),
+                              const SizedBox(width: 24),
+                              SizedBox(width: 350, child: summary),
+                            ],
+                          )
+                        else
+                          Column(
+                            key: const Key('mobile-booking-content'),
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              roomList,
+                              const SizedBox(height: 24),
+                              summary,
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

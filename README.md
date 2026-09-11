@@ -1,17 +1,106 @@
-# hotel_room_booking
+# Hotel Room Booking
 
-A new Flutter project.
+A responsive Flutter booking calculator created for the Raintech Software Limited coding exercise. Users can choose check-in and check-out dates, select a hotel room, and immediately see the number of nights and total stay price.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Five rooms from the supplied coding-test dataset
+- Check-in and check-out date pickers
+- Validation for past check-ins, missing dates, same-day stays, and reversed date ranges
+- Single-room selection with clear visual feedback
+- Automatic night and total-price calculation
+- Indian Rupee formatting with Indian digit grouping through `intl`
+- Responsive desktop, tablet, and mobile layouts
+- Accessible status messages for incomplete, invalid, and valid selections
 
-A few resources to get you started if this is your first Flutter project:
+## Technology
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- Flutter and Dart
+- Material 3 widgets with a custom Raintech-inspired theme
+- `intl` for currency and date presentation
+- `flutter_test` for unit and widget tests
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+No backend, database, authentication, payment processing, or booking persistence is used. Room data is stored locally as required by the exercise.
+
+## Run locally
+
+Install a current Flutter SDK and confirm that Flutter is available:
+
+```bash
+flutter doctor
+```
+
+From the project directory, install dependencies:
+
+```bash
+flutter pub get
+```
+
+Run the web application in Chrome:
+
+```bash
+flutter run -d chrome
+```
+
+The project can also run on another configured Flutter target:
+
+```bash
+flutter devices
+flutter run -d <device-id>
+```
+
+## Quality checks
+
+Run static analysis and the complete test suite:
+
+```bash
+flutter analyze
+flutter test
+```
+
+Create a production web build:
+
+```bash
+flutter build web
+```
+
+The generated web application is written to `build/web`.
+
+## Project structure
+
+```text
+lib/
+├── data/       Hardcoded room dataset
+├── models/     Room and booking domain models
+├── screens/    Booking-page state and composition
+├── services/   Date validation and price calculations
+├── theme/      Application colors and Material theme
+├── utils/      Date and INR presentation formatters
+└── widgets/    Reusable booking interface components
+
+test/
+├── data/       Sample-data tests
+├── models/     Domain-model tests
+├── services/   Date, night, and price calculation tests
+├── utils/      Formatting tests
+└── widget_test.dart
+```
+
+Business logic is kept outside the widgets so it can be tested without rendering the interface. The page owns only the current date and room selections.
+
+## Booking rules and assumptions
+
+- Check-in may be today or a future date, but not a past date.
+- Check-out must be later than check-in.
+- Check-out is exclusive: checking in on 15 September and checking out on 18 September is three nights.
+- Night counts use calendar dates rather than elapsed hours, avoiding time-of-day and daylight-saving errors.
+- Prices are stored as whole Rupees and formatted only at the presentation boundary.
+- Selecting a different room immediately recalculates the total.
+
+## Improvements with more time
+
+- Add hardcoded existing bookings and disable rooms with overlapping stays.
+- Add a guest-count filter based on each room's maximum capacity.
+- Add golden tests for visual regression and broader accessibility testing.
+- Add localization support beyond English and INR.
+- Introduce persisted bookings and an API only if the product scope later requires them.

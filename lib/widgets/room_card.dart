@@ -18,8 +18,11 @@ class RoomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final accentColor = isSelected
+        ? colorScheme.secondary
+        : colorScheme.primary;
     final borderColor = isSelected
-        ? colorScheme.primary
+        ? colorScheme.secondary
         : const Color(0xFFDDE4E9);
 
     return Semantics(
@@ -28,7 +31,7 @@ class RoomCard extends StatelessWidget {
       label: '${room.code}, ${room.type}',
       child: Material(
         color: isSelected
-            ? colorScheme.primary.withValues(alpha: 0.05)
+            ? colorScheme.secondary.withValues(alpha: 0.06)
             : Colors.white,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
@@ -55,12 +58,12 @@ class RoomCard extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.08),
+                          color: accentColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          Icons.bed_outlined,
-                          color: colorScheme.primary,
+                          isSelected ? Icons.check_rounded : Icons.bed_outlined,
+                          color: accentColor,
                         ),
                       ),
                       const SizedBox(width: 14),

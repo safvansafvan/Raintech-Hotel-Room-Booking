@@ -75,6 +75,23 @@ void main() {
       expect(nights, 2);
     });
 
+    test('counts nights across a leap day and year boundary', () {
+      expect(
+        BookingCalculator.calculateNights(
+          checkIn: DateTime(2028, 2, 28),
+          checkOut: DateTime(2028, 3, 1),
+        ),
+        2,
+      );
+      expect(
+        BookingCalculator.calculateNights(
+          checkIn: DateTime(2026, 12, 31),
+          checkOut: DateTime(2027, 1, 2),
+        ),
+        2,
+      );
+    });
+
     test('rejects a non-positive stay', () {
       expect(
         () => BookingCalculator.calculateNights(
@@ -83,13 +100,46 @@ void main() {
         ),
         throwsArgumentError,
       );
+      expect(
+        () => BookingCalculator.calculateNights(
+          checkIn: DateTime(2026, 9, 13),
+          checkOut: DateTime(2026, 9, 12),
+        ),
+        throwsArgumentError,
+      );
     });
   });
 
-  test('calculates the total from nights and the nightly rate', () {
-    expect(
-      BookingCalculator.calculateTotalPrice(nights: 3, pricePerNight: 5800),
-      17400,
-    );
+  group('calculateTotalPrice', () {
+    for (final (nights, rate, expectedTotal) in [
+      (1, 3500, 3500),
+      (3, 5800, 17400),
+      (7, 4200, 29400),
+    ]) {
+      test('calculates $nights nights at ₹$rate', () {
+        expect(
+          BookingCalculator.calculateTotalPrice(
+            nights: nights,
+            pricePerNight: rate,
+          ),
+          expectedTotal,
+        );
+      });
+    }
+
+    test('rejects non-positive nights and rates', () {
+      expect(
+        () => BookingCalculator.calculateTotalPrice(
+          nights: 0,
+          pricePerNight: 3500,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () =>
+            BookingCalculator.calculateTotalPrice(nights: 2, pricePerNight: 0),
+        throwsArgumentError,
+      );
+    });
   });
 }
