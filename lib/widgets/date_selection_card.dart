@@ -9,6 +9,9 @@ class DateSelectionCard extends StatelessWidget {
     this.checkOutDate,
     this.onCheckInTap,
     this.onCheckOutTap,
+    required this.guestCount,
+    this.onDecreaseGuests,
+    this.onIncreaseGuests,
     this.message,
     this.messageTone = MessageTone.info,
   });
@@ -17,6 +20,9 @@ class DateSelectionCard extends StatelessWidget {
   final String? checkOutDate;
   final VoidCallback? onCheckInTap;
   final VoidCallback? onCheckOutTap;
+  final int guestCount;
+  final VoidCallback? onDecreaseGuests;
+  final VoidCallback? onIncreaseGuests;
   final String? message;
   final MessageTone messageTone;
 
@@ -36,7 +42,6 @@ class DateSelectionCard extends StatelessWidget {
             const SizedBox(height: 20),
             LayoutBuilder(
               builder: (context, constraints) {
-                final stackFields = constraints.maxWidth < 600;
                 final checkInField = _DateField(
                   key: const Key('check-in-date-field'),
                   label: 'Check-in',
@@ -49,13 +54,36 @@ class DateSelectionCard extends StatelessWidget {
                   value: checkOutDate,
                   onTap: onCheckOutTap,
                 );
+                final guestField = _GuestField(
+                  guestCount: guestCount,
+                  onDecrease: onDecreaseGuests,
+                  onIncrease: onIncreaseGuests,
+                );
 
-                if (stackFields) {
+                if (constraints.maxWidth < 520) {
                   return Column(
                     children: [
                       checkInField,
                       const SizedBox(height: 14),
                       checkOutField,
+                      const SizedBox(height: 14),
+                      guestField,
+                    ],
+                  );
+                }
+
+                if (constraints.maxWidth < 850) {
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: checkInField),
+                          const SizedBox(width: 16),
+                          Expanded(child: checkOutField),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      guestField,
                     ],
                   );
                 }
@@ -65,6 +93,8 @@ class DateSelectionCard extends StatelessWidget {
                     Expanded(child: checkInField),
                     const SizedBox(width: 16),
                     Expanded(child: checkOutField),
+                    const SizedBox(width: 16),
+                    Expanded(child: guestField),
                   ],
                 );
               },
@@ -75,6 +105,75 @@ class DateSelectionCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GuestField extends StatelessWidget {
+  const _GuestField({
+    required this.guestCount,
+    this.onDecrease,
+    this.onIncrease,
+  });
+
+  final int guestCount;
+  final VoidCallback? onDecrease;
+  final VoidCallback? onIncrease;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final guestLabel = '$guestCount ${guestCount == 1 ? 'guest' : 'guests'}';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFB),
+        border: Border.all(color: const Color(0xFFDCE3E8)),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(Icons.group_outlined, color: colorScheme.primary),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Guests', style: Theme.of(context).textTheme.labelMedium),
+                const SizedBox(height: 3),
+                Text(
+                  guestLabel,
+                  key: const Key('guest-count-label'),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            key: const Key('decrease-guests'),
+            onPressed: onDecrease,
+            tooltip: 'Remove guest',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.remove_rounded),
+          ),
+          IconButton(
+            key: const Key('increase-guests'),
+            onPressed: onIncrease,
+            tooltip: 'Add guest',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.add_rounded),
+          ),
+        ],
       ),
     );
   }

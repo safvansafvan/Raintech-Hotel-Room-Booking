@@ -6,6 +6,7 @@ class BookingSummaryCard extends StatelessWidget {
   const BookingSummaryCard({
     super.key,
     this.room = 'Not selected',
+    this.guests = '1 guest',
     this.stay = 'Select dates',
     this.nights = '—',
     this.pricePerNight = '—',
@@ -15,6 +16,7 @@ class BookingSummaryCard extends StatelessWidget {
   });
 
   final String room;
+  final String guests;
   final String stay;
   final String nights;
   final String pricePerNight;
@@ -56,6 +58,8 @@ class BookingSummaryCard extends StatelessWidget {
             ValidationMessage(message: message, tone: messageTone),
             const SizedBox(height: 24),
             _SummaryRow(label: 'Room', value: room),
+            const SizedBox(height: 14),
+            _SummaryRow(label: 'Guests', value: guests),
             const SizedBox(height: 14),
             _SummaryRow(label: 'Stay', value: stay),
             const SizedBox(height: 14),

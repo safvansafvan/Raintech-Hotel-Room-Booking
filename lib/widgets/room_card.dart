@@ -8,34 +8,44 @@ class RoomCard extends StatelessWidget {
     required this.room,
     super.key,
     this.isSelected = false,
+    this.isAvailable = true,
     this.onTap,
   });
 
   final Room room;
   final bool isSelected;
+  final bool isAvailable;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final accentColor = isSelected
+    final accentColor = !isAvailable
+        ? const Color(0xFF7A8791)
+        : isSelected
         ? colorScheme.secondary
         : colorScheme.primary;
-    final borderColor = isSelected
+    final borderColor = !isAvailable
+        ? const Color(0xFFD6DDE2)
+        : isSelected
         ? colorScheme.secondary
         : const Color(0xFFDDE4E9);
 
     return Semantics(
       button: true,
+      enabled: isAvailable,
       selected: isSelected,
-      label: '${room.code}, ${room.type}',
+      label:
+          '${room.code}, ${room.type}${isAvailable ? '' : ', booked for the selected dates'}',
       child: Material(
-        color: isSelected
+        color: !isAvailable
+            ? const Color(0xFFF2F4F5)
+            : isSelected
             ? colorScheme.secondary.withValues(alpha: 0.06)
             : Colors.white,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: onTap,
+          onTap: isAvailable ? onTap : null,
           borderRadius: BorderRadius.circular(14),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
@@ -62,7 +72,11 @@ class RoomCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          isSelected ? Icons.check_rounded : Icons.bed_outlined,
+                          !isAvailable
+                              ? Icons.lock_outline_rounded
+                              : isSelected
+                              ? Icons.check_rounded
+                              : Icons.bed_outlined,
                           color: accentColor,
                         ),
                       ),
@@ -114,15 +128,27 @@ class RoomCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          BookingFormatters.currency(room.pricePerNight),
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: colorScheme.primary),
-                        ),
-                        Text(
-                          'per night',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
+                        if (isAvailable) ...[
+                          Text(
+                            BookingFormatters.currency(room.pricePerNight),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(color: colorScheme.primary),
+                          ),
+                          Text(
+                            'per night',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ] else ...[
+                          Text(
+                            'Booked',
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(color: colorScheme.error),
+                          ),
+                          Text(
+                            'Unavailable',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                       ],
                     ),
                   ],

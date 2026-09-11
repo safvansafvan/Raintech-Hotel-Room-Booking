@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../data/existing_bookings.dart';
 import '../data/room_data.dart';
 import '../models/room.dart';
 import '../services/booking_calculator.dart';
+import '../services/room_availability_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/booking_formatters.dart';
 import '../widgets/booking_header.dart';
@@ -26,8 +28,15 @@ class _BookingPageState extends State<BookingPage> {
   DateTime? _checkInDate;
   DateTime? _checkOutDate;
   Room? _selectedRoom;
+  int _guestCount = 1;
+  String? _roomMessage;
 
   DateTime get _today => BookingCalculator.calendarDate(widget.now());
+
+  int get _maximumGuestCount => sampleRooms.fold(
+    1,
+    (maximum, room) => room.maxGuests > maximum ? room.maxGuests : maximum,
+  );
 
   Future<void> _selectCheckInDate() async {
     final today = _today;
@@ -48,6 +57,8 @@ class _BookingPageState extends State<BookingPage> {
 
     setState(() {
       _checkInDate = BookingCalculator.calendarDate(pickedDate);
+      _roomMessage = null;
+      _clearUnavailableSelectedRoom();
     });
   }
 
@@ -73,13 +84,85 @@ class _BookingPageState extends State<BookingPage> {
 
     setState(() {
       _checkOutDate = BookingCalculator.calendarDate(pickedDate);
+      _roomMessage = null;
+      _clearUnavailableSelectedRoom();
     });
   }
 
   void _selectRoom(Room room) {
+    if (room.maxGuests < _guestCount) {
+      setState(() {
+        _roomMessage =
+            '${room.code} cannot accommodate $_guestCount guests. '
+            'Please select another room.';
+      });
+      return;
+    }
+    if (!_isRoomAvailableForSelectedDates(room)) {
+      setState(() {
+        _roomMessage =
+            '${room.code} is already booked for these dates. '
+            'Please select another room.';
+      });
+      return;
+    }
+
     setState(() {
       _selectedRoom = room;
+      _roomMessage = null;
     });
+  }
+
+  void _changeGuestCount(int difference) {
+    final nextGuestCount = _guestCount + difference;
+    if (nextGuestCount < 1 || nextGuestCount > _maximumGuestCount) {
+      return;
+    }
+
+    setState(() {
+      _guestCount = nextGuestCount;
+      _roomMessage = null;
+
+      if (_selectedRoom case final selectedRoom?
+          when selectedRoom.maxGuests < nextGuestCount) {
+        _selectedRoom = null;
+        _roomMessage =
+            '${selectedRoom.code} cannot accommodate $nextGuestCount guests. '
+            'Please select another room.';
+      }
+    });
+  }
+
+  void _clearUnavailableSelectedRoom() {
+    final selectedRoom = _selectedRoom;
+    if (selectedRoom == null) {
+      return;
+    }
+
+    if (!_isRoomAvailableForSelectedDates(selectedRoom)) {
+      _selectedRoom = null;
+      _roomMessage =
+          '${selectedRoom.code} is already booked for these dates. '
+          'Please select another room.';
+    }
+  }
+
+  bool _isRoomAvailableForSelectedDates(Room room) {
+    final dateError = BookingCalculator.validateDates(
+      checkIn: _checkInDate,
+      checkOut: _checkOutDate,
+      today: _today,
+    );
+    if (dateError != null) {
+      return true;
+    }
+
+    return RoomAvailabilityService.isRoomAvailable(
+      room: room,
+      checkIn: _checkInDate!,
+      checkOut: _checkOutDate!,
+      existingBookings: existingBookings,
+    );
   }
 
   @override
@@ -92,6 +175,16 @@ class _BookingPageState extends State<BookingPage> {
     final hasStartedDateSelection =
         _checkInDate != null || _checkOutDate != null;
     final datesAreValid = dateError == null;
+    final filteredRooms = sampleRooms
+        .where((room) => room.maxGuests >= _guestCount)
+        .toList(growable: false);
+    final unavailableRoomCodes = datesAreValid
+        ? RoomAvailabilityService.unavailableRoomCodes(
+            checkIn: _checkInDate!,
+            checkOut: _checkOutDate!,
+            existingBookings: existingBookings,
+          )
+        : const <String>{};
     final nights = datesAreValid
         ? BookingCalculator.calculateNights(
             checkIn: _checkInDate!,
@@ -118,17 +211,23 @@ class _BookingPageState extends State<BookingPage> {
       hasStartedDateSelection: hasStartedDateSelection,
       nights: nights,
       total: total,
+      roomMessage: _roomMessage,
     );
 
     final roomList = RoomList(
-      rooms: sampleRooms,
+      rooms: filteredRooms,
+      guestCount: _guestCount,
       selectedRoom: _selectedRoom,
+      unavailableRoomCodes: unavailableRoomCodes,
+      availabilityChecked: datesAreValid,
+      message: _roomMessage,
       onRoomSelected: _selectRoom,
     );
     final summary = BookingSummaryCard(
       room: _selectedRoom == null
           ? 'Not selected'
           : '${_selectedRoom!.code} — ${_selectedRoom!.type}',
+      guests: '$_guestCount ${_guestCount == 1 ? 'guest' : 'guests'}',
       stay: _stayLabel,
       nights: nights?.toString() ?? '—',
       pricePerNight: _selectedRoom == null
@@ -178,6 +277,13 @@ class _BookingPageState extends State<BookingPage> {
                               : BookingFormatters.date(_checkOutDate!),
                           onCheckInTap: _selectCheckInDate,
                           onCheckOutTap: _selectCheckOutDate,
+                          guestCount: _guestCount,
+                          onDecreaseGuests: _guestCount > 1
+                              ? () => _changeGuestCount(-1)
+                              : null,
+                          onIncreaseGuests: _guestCount < _maximumGuestCount
+                              ? () => _changeGuestCount(1)
+                              : null,
                           message: dateMessage,
                           messageTone: dateMessageTone,
                         ),
@@ -233,9 +339,13 @@ class _BookingPageState extends State<BookingPage> {
     required bool hasStartedDateSelection,
     required int? nights,
     required int? total,
+    required String? roomMessage,
   }) {
     if (hasStartedDateSelection && dateError != null) {
       return (dateError.message, MessageTone.error);
+    }
+    if (roomMessage != null) {
+      return (roomMessage, MessageTone.error);
     }
     if (!hasStartedDateSelection && _selectedRoom == null) {
       return (

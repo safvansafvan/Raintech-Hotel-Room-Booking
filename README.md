@@ -8,6 +8,9 @@ A responsive Flutter booking calculator created for the Raintech Software Limite
 - Check-in and check-out date pickers
 - Validation for past check-ins, missing dates, same-day stays, and reversed date ranges
 - Single-room selection with clear visual feedback
+- Guest-count filtering based on room capacity
+- Conflict detection against hardcoded existing bookings
+- Disabled room selection with a clear `Booked` status
 - Automatic night and total-price calculation
 - Indian Rupee formatting with Indian digit grouping through `intl`
 - Responsive desktop, tablet, and mobile layouts
@@ -70,10 +73,10 @@ The generated web application is written to `build/web`.
 
 ```text
 lib/
-├── data/       Hardcoded room dataset
+├── data/       Hardcoded room and existing-booking datasets
 ├── models/     Room and booking domain models
 ├── screens/    Booking-page state and composition
-├── services/   Date validation and price calculations
+├── services/   Validation, availability, and price calculations
 ├── theme/      Application colors and Material theme
 ├── utils/      Date and INR presentation formatters
 └── widgets/    Reusable booking interface components
@@ -96,11 +99,14 @@ Business logic is kept outside the widgets so it can be tested without rendering
 - Night counts use calendar dates rather than elapsed hours, avoiding time-of-day and daylight-saving errors.
 - Prices are stored as whole Rupees and formatted only at the presentation boundary.
 - Selecting a different room immediately recalculates the total.
+- Only rooms that can accommodate the selected number of guests are shown.
+- Date ranges use check-out-exclusive overlap rules, so back-to-back bookings are allowed.
+- Room R101 is booked from 15–18 January 2027, and R201 is booked from 20–23 January 2027. These ranges can be used to review the availability behaviour.
 
 ## Improvements with more time
 
-- Add hardcoded existing bookings and disable rooms with overlapping stays.
-- Add a guest-count filter based on each room's maximum capacity.
+- Load room inventory and bookings from an API instead of hardcoded data.
+- Preserve the current booking draft when the page is refreshed.
 - Add golden tests for visual regression and broader accessibility testing.
 - Add localization support beyond English and INR.
 - Introduce persisted bookings and an API only if the product scope later requires them.

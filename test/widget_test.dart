@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hotel_room_booking/app.dart';
+import 'package:hotel_room_booking/data/room_data.dart';
+import 'package:hotel_room_booking/main.dart';
+import 'package:hotel_room_booking/models/room.dart';
 import 'package:hotel_room_booking/screens/booking_page.dart';
+import 'package:hotel_room_booking/widgets/room_list.dart';
 
 void main() {
   testWidgets('shows the booking layout and supplied rooms', (tester) async {
@@ -82,6 +85,90 @@ void main() {
     expect(find.text('R201 — Executive Suite'), findsOneWidget);
     expect(find.text('₹17,400'), findsOneWidget);
     expect(find.text('Total calculated for 3 nights.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('filters rooms by the selected guest capacity', (tester) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const HotelBookingApp());
+
+    for (var guest = 2; guest <= 4; guest++) {
+      await tester.tap(find.byKey(const Key('increase-guests')));
+      await tester.pump();
+    }
+
+    expect(
+      tester.widget<Text>(find.byKey(const Key('guest-count-label'))).data,
+      '4 guests',
+    );
+    expect(find.text('1 room'), findsOneWidget);
+    expect(find.text('R301'), findsOneWidget);
+    expect(find.text('R101'), findsNothing);
+    expect(find.text('R201'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('clears a selected room when guest count exceeds capacity', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const HotelBookingApp());
+    await tester.tap(find.text('R101'));
+    await tester.pump();
+
+    expect(find.text('R101 — Deluxe Room'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('increase-guests')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('increase-guests')));
+    await tester.pump();
+
+    expect(find.text('R101'), findsNothing);
+    expect(find.text('Not selected'), findsOneWidget);
+    expect(
+      find.text(
+        'R101 cannot accommodate 3 guests. Please select another room.',
+      ),
+      findsNWidgets(2),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('labels booked rooms and prevents their selection', (
+    tester,
+  ) async {
+    Room? selectedRoom;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: RoomList(
+            rooms: sampleRooms.take(2).toList(),
+            guestCount: 2,
+            unavailableRoomCodes: const {'R101'},
+            availabilityChecked: true,
+            onRoomSelected: (room) => selectedRoom = room,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('1 available'), findsOneWidget);
+    expect(find.text('Booked'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('room-R101')));
+    expect(selectedRoom, isNull);
+
+    await tester.tap(find.byKey(const ValueKey('room-R102')));
+    expect(selectedRoom?.code, 'R102');
     expect(tester.takeException(), isNull);
   });
 }
