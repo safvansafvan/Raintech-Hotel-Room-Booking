@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'validation_message.dart';
+
 class BookingSummaryCard extends StatelessWidget {
   const BookingSummaryCard({
     super.key,
@@ -8,6 +10,8 @@ class BookingSummaryCard extends StatelessWidget {
     this.nights = '—',
     this.pricePerNight = '—',
     this.total = '—',
+    this.message = 'Select your stay dates and a room to calculate the total.',
+    this.messageTone = MessageTone.info,
   });
 
   final String room;
@@ -15,6 +19,8 @@ class BookingSummaryCard extends StatelessWidget {
   final String nights;
   final String pricePerNight;
   final String total;
+  final String message;
+  final MessageTone messageTone;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +52,8 @@ class BookingSummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             const Text('Your stay details will appear here.'),
+            const SizedBox(height: 18),
+            ValidationMessage(message: message, tone: messageTone),
             const SizedBox(height: 24),
             _SummaryRow(label: 'Room', value: room),
             const SizedBox(height: 14),
@@ -59,13 +67,20 @@ class BookingSummaryCard extends StatelessWidget {
               child: Divider(),
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Total', style: Theme.of(context).textTheme.titleLarge),
-                Text(
-                  total,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: colorScheme.primary,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        total,
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(color: colorScheme.primary),
+                      ),
+                    ),
                   ),
                 ),
               ],

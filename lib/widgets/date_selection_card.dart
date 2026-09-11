@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'validation_message.dart';
+
 class DateSelectionCard extends StatelessWidget {
   const DateSelectionCard({
     super.key,
@@ -7,12 +9,16 @@ class DateSelectionCard extends StatelessWidget {
     this.checkOutDate,
     this.onCheckInTap,
     this.onCheckOutTap,
+    this.message,
+    this.messageTone = MessageTone.info,
   });
 
   final String? checkInDate;
   final String? checkOutDate;
   final VoidCallback? onCheckInTap;
   final VoidCallback? onCheckOutTap;
+  final String? message;
+  final MessageTone messageTone;
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +38,13 @@ class DateSelectionCard extends StatelessWidget {
               builder: (context, constraints) {
                 final stackFields = constraints.maxWidth < 600;
                 final checkInField = _DateField(
+                  key: const Key('check-in-date-field'),
                   label: 'Check-in',
                   value: checkInDate,
                   onTap: onCheckInTap,
                 );
                 final checkOutField = _DateField(
+                  key: const Key('check-out-date-field'),
                   label: 'Check-out',
                   value: checkOutDate,
                   onTap: onCheckOutTap,
@@ -61,6 +69,10 @@ class DateSelectionCard extends StatelessWidget {
                 );
               },
             ),
+            if (message != null) ...[
+              const SizedBox(height: 16),
+              ValidationMessage(message: message!, tone: messageTone),
+            ],
           ],
         ),
       ),
@@ -69,7 +81,7 @@ class DateSelectionCard extends StatelessWidget {
 }
 
 class _DateField extends StatelessWidget {
-  const _DateField({required this.label, this.value, this.onTap});
+  const _DateField({required this.label, super.key, this.value, this.onTap});
 
   final String label;
   final String? value;
