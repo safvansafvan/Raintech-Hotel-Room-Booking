@@ -1,9 +1,5 @@
 import 'room.dart';
 
-/// A valid stay request for a selected [room].
-///
-/// Check-in and check-out are normalized to local calendar dates so later
-/// calculations are not affected by time-of-day values.
 class Booking {
   Booking({
     required this.room,
